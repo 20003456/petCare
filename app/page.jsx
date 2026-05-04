@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Clock3,
   HeartHandshake,
+  LogIn,
   MapPin,
   PawPrint,
   Scissors,
@@ -134,9 +135,19 @@ const reviewPages = reviews.reduce((pages, review, index) => {
   return pages;
 }, []);
 
+const initialBookingForm = {
+  petName: "",
+  petType: "",
+  appointmentDate: "",
+  phone: "",
+};
+
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeReviewPage, setActiveReviewPage] = useState(0);
+  const [bookingForm, setBookingForm] = useState(initialBookingForm);
+  const [bookingStatus, setBookingStatus] = useState("idle");
+  const [bookingMessage, setBookingMessage] = useState("");
   const currentSlide = heroSlides[activeSlide];
 
   useEffect(() => {
@@ -175,6 +186,36 @@ export default function HomePage() {
     });
   };
 
+  const updateBookingField = (field, value) => {
+    setBookingForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const submitBooking = async (event) => {
+    event.preventDefault();
+    setBookingStatus("submitting");
+    setBookingMessage("");
+
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingForm),
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "提交失败，请稍后再试。");
+      }
+
+      setBookingForm(initialBookingForm);
+      setBookingStatus("success");
+      setBookingMessage("预约已提交，门店会尽快联系你确认时间。");
+    } catch (error) {
+      setBookingStatus("error");
+      setBookingMessage(error.message || "提交失败，请稍后再试。");
+    }
+  };
+
   return (
     <main>
       <header className="site-header">
@@ -190,6 +231,10 @@ export default function HomePage() {
           <a href="#store">店面</a>
           <a href="#process">流程</a>
           <a href="#booking">预约</a>
+          <a className="nav-auth-link" href="/auth">
+            <LogIn size={17} />
+            登录 / 注册
+          </a>
         </nav>
       </header>
 
@@ -416,14 +461,24 @@ export default function HomePage() {
             <li><Check size={18} /> 到店前发送准备清单</li>
           </ul>
         </div>
-        <form className="booking-form">
+        <form className="booking-form" onSubmit={submitBooking}>
           <label>
             宠物名字
-            <input type="text" placeholder="例如：奶昔" />
+            <input
+              type="text"
+              placeholder="例如：奶昔"
+              value={bookingForm.petName}
+              onChange={(event) => updateBookingField("petName", event.target.value)}
+              required
+            />
           </label>
           <label>
             宠物类型
-            <select defaultValue="">
+            <select
+              value={bookingForm.petType}
+              onChange={(event) => updateBookingField("petType", event.target.value)}
+              required
+            >
               <option value="" disabled>请选择</option>
               <option>小型犬</option>
               <option>中大型犬</option>
@@ -432,16 +487,32 @@ export default function HomePage() {
           </label>
           <label>
             预约日期
-            <input type="date" />
+            <input
+              type="date"
+              value={bookingForm.appointmentDate}
+              onChange={(event) => updateBookingField("appointmentDate", event.target.value)}
+              required
+            />
           </label>
           <label>
             联系电话
-            <input type="tel" placeholder="用于确认预约" />
+            <input
+              type="tel"
+              placeholder="用于确认预约"
+              value={bookingForm.phone}
+              onChange={(event) => updateBookingField("phone", event.target.value)}
+              required
+            />
           </label>
-          <button type="button">
+          <button type="submit" disabled={bookingStatus === "submitting"}>
             <CalendarCheck size={19} />
-            提交预约
+            {bookingStatus === "submitting" ? "提交中..." : "提交预约"}
           </button>
+          {bookingMessage ? (
+            <p className={`booking-message booking-message-${bookingStatus}`}>
+              {bookingMessage}
+            </p>
+          ) : null}
         </form>
       </section>
 
