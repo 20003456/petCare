@@ -64,28 +64,85 @@ const reviews = [
   {
     name: "Lucky 家长",
     pet: "比熊 · 3 岁",
+    service: "基础香波洗护",
     text: "以前洗澡会紧张发抖，这次护理师先陪它熟悉环境，吹毛也分段来。接回家毛很蓬，耳朵也清理得很干净。",
   },
   {
     name: "糯米 家长",
     pet: "英短 · 5 岁",
+    service: "猫咪安静时段",
     text: "猫咪胆子小，店里安排了安静时段。全程有照片反馈，没有硬推项目，价格和预约时说的一样。",
   },
   {
     name: "豆包 家长",
     pet: "柯基 · 2 岁",
+    service: "SPA 深层护理",
     text: "掉毛季做完 SPA 明显舒服很多，回家沙发上的浮毛少了。脚底毛和指甲修得很细，走路也不打滑了。",
+  },
+  {
+    name: "奶茶 家长",
+    pet: "金毛 · 4 岁",
+    service: "大型犬洗护",
+    text: "金毛毛量大，之前每次洗完都要很久才干。这次吹得很透，护毛味道也很清爽，第二天摸起来还是蓬松的。",
+  },
+  {
+    name: "奥利奥 家长",
+    pet: "雪纳瑞 · 6 岁",
+    service: "造型精修",
+    text: "修脸很有耐心，没有把胡子剪得太短，整体看起来精神很多。护理师还提醒了耳道日常清洁的方法，很贴心。",
+  },
+  {
+    name: "芝麻 家长",
+    pet: "布偶 · 2 岁",
+    service: "猫咪轻柔梳洗",
+    text: "布偶容易打结，店里先把结慢慢梳开，没有直接剃掉。回家后情绪很稳定，也没有一直舔毛抗拒。",
+  },
+  {
+    name: "可乐 家长",
+    pet: "泰迪 · 8 岁",
+    service: "老年犬舒缓护理",
+    text: "狗狗年纪大了站久会累，护理师中途让它休息了几次。洗完没有疲惫感，脚垫也修得很干净。",
+  },
+  {
+    name: "元宝 家长",
+    pet: "柴犬 · 3 岁",
+    service: "除浮毛护理",
+    text: "柴犬换毛期太夸张了，做完除浮毛护理以后家里轻松很多。护理记录写得清楚，知道下次该什么时候再来。",
+  },
+  {
+    name: "小满 家长",
+    pet: "约克夏 · 1 岁",
+    service: "幼宠首次洗护",
+    text: "第一次到店本来担心会害怕，结果护理师一直轻声安抚，还把每一步都发给我看。小满回家后很放松。",
   },
 ];
 
+const reviewPages = reviews.reduce((pages, review, index) => {
+  const pageIndex = Math.floor(index / 3);
+  if (!pages[pageIndex]) {
+    pages[pageIndex] = [];
+  }
+  pages[pageIndex].push(review);
+  return pages;
+}, []);
+
 function App() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [activeReviewPage, setActiveReviewPage] = useState(0);
   const currentSlide = heroSlides[activeSlide];
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       setActiveSlide((index) => (index + 1) % heroSlides.length);
     }, 5600);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveReviewPage((index) => (index + 1) % reviewPages.length);
+    }, 4800);
 
     return () => window.clearInterval(timer);
   }, []);
@@ -97,6 +154,16 @@ function App() {
       }
 
       return (index + 1) % heroSlides.length;
+    });
+  };
+
+  const goToReviewPage = (direction) => {
+    setActiveReviewPage((index) => {
+      if (direction === "previous") {
+        return (index - 1 + reviewPages.length) % reviewPages.length;
+      }
+
+      return (index + 1) % reviewPages.length;
     });
   };
 
@@ -205,25 +272,58 @@ function App() {
       </section>
 
       <section className="section reviews-section" id="reviews">
-        <div className="section-heading">
-          <p className="eyebrow">Reviews</p>
-          <h2>真实家长反馈</h2>
-          <p>洗护不只看造型，也看宠物回家后的状态。这里是近期到店家长的体验记录。</p>
+        <div className="reviews-header">
+          <div className="section-heading">
+            <p className="eyebrow">Reviews</p>
+            <h2>真实家长反馈</h2>
+            <p>洗护不只看造型，也看宠物回家后的状态。这里是近期到店家长的体验记录。</p>
+          </div>
+          <div className="review-controls" aria-label="评价轮播切换">
+            <button type="button" onClick={() => goToReviewPage("previous")} aria-label="上一组评价">
+              <ChevronLeft size={20} />
+            </button>
+            <button type="button" onClick={() => goToReviewPage("next")} aria-label="下一组评价">
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
-        <div className="review-grid">
-          {reviews.map((review) => (
-            <article className="review-card" key={review.name}>
-              <div className="stars" aria-label="五星评价">
-                {[...Array(5)].map((_, index) => (
-                  <Star key={index} size={18} fill="currentColor" />
+        <div className="review-carousel">
+          <div
+            className="review-track"
+            style={{ transform: `translateX(-${activeReviewPage * 100}%)` }}
+          >
+            {reviewPages.map((page, pageIndex) => (
+              <div className="review-page" key={`review-page-${pageIndex}`}>
+                {page.map((review) => (
+                  <article className="review-card" key={review.name}>
+                    <div className="review-card-top">
+                      <div className="stars" aria-label="五星评价">
+                        {[...Array(5)].map((_, index) => (
+                          <Star key={index} size={18} fill="currentColor" />
+                        ))}
+                      </div>
+                      <span>{review.service}</span>
+                    </div>
+                    <p className="review-text">“{review.text}”</p>
+                    <div className="review-author">
+                      <span>{review.name}</span>
+                      <small>{review.pet}</small>
+                    </div>
+                  </article>
                 ))}
               </div>
-              <p className="review-text">“{review.text}”</p>
-              <div className="review-author">
-                <span>{review.name}</span>
-                <small>{review.pet}</small>
-              </div>
-            </article>
+            ))}
+          </div>
+        </div>
+        <div className="review-dots" aria-label="评价页码">
+          {reviewPages.map((page, index) => (
+            <button
+              type="button"
+              className={index === activeReviewPage ? "is-active" : ""}
+              onClick={() => setActiveReviewPage(index)}
+              aria-label={`切换到第 ${index + 1} 组评价`}
+              key={`review-dot-${page[0].name}`}
+            />
           ))}
         </div>
       </section>

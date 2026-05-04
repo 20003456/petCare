@@ -322,14 +322,57 @@ h3 {
   background: #ffffff;
 }
 
-.review-grid {
+.reviews-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.review-controls {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.review-controls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #d8e9e3;
+  border-radius: 8px;
+  color: #0c6b64;
+  background: #f7fbf9;
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.review-controls button:hover {
+  color: #fff;
+  background: #0c6b64;
+  transform: translateY(-2px);
+}
+
+.review-carousel {
+  overflow: hidden;
+}
+
+.review-track {
+  display: flex;
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.review-page {
+  min-width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
 }
 
 .review-card {
-  min-height: 250px;
+  min-height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -337,7 +380,28 @@ h3 {
   padding: 28px;
   border: 1px solid #e5eee9;
   border-radius: 8px;
-  background: #f7fbf9;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 251, 249, 0.96)),
+    #f7fbf9;
+  box-shadow: 0 18px 44px rgba(42, 70, 62, 0.08);
+  animation: review-card-rise 520ms ease both;
+}
+
+.review-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-card-top > span {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #0c6b64;
+  background: #e6f4ef;
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .stars {
@@ -365,6 +429,41 @@ h3 {
 .review-author small {
   color: #667174;
   font-size: 0.9rem;
+}
+
+.review-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.review-dots button {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #cbded8;
+  cursor: pointer;
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.review-dots button.is-active {
+  width: 30px;
+  background: #e05a47;
+}
+
+@keyframes review-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .store-section {
@@ -645,12 +744,20 @@ footer p {
 
   .trust-strip,
   .service-grid,
-  .review-grid,
+  .review-page,
   .store-section,
   .feature-band,
   .booking-section,
   .booking-form {
     grid-template-columns: 1fr;
+  }
+
+  .reviews-header {
+    display: grid;
+  }
+
+  .review-controls {
+    padding-top: 0;
   }
 
   .carousel-controls {
@@ -673,5 +780,17 @@ footer p {
 
   footer {
     display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-track,
+  .review-controls button,
+  .review-dots button {
+    transition: none;
+  }
+
+  .review-card {
+    animation: none;
   }
 }
