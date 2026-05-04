@@ -24,6 +24,7 @@ pnpm-debug.log*
 .cache/
 .parcel-cache/
 coverage/
+worklogs/
 
 # Editor and OS files
 .vscode/
