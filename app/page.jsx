@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Bath,
   CalendarCheck,
@@ -15,10 +16,10 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
-import heroCatCare from "./assets/hero-cat-care.png";
-import heroDogSpa from "./assets/hero-dog-spa.png";
-import storeMapYichuan from "./assets/store-map-yichuan.png";
-import "./styles.css";
+import heroCatCare from "../src/assets/hero-cat-care.png";
+import heroDogSpa from "../src/assets/hero-dog-spa.png";
+import heroMascotCat from "../src/assets/hero-mascot-cat.png";
+import storeMapYichuan from "../src/assets/store-map-yichuan.png";
 
 const services = [
   {
@@ -43,6 +44,13 @@ const services = [
 
 const heroSlides = [
   {
+    image: heroMascotCat,
+    alt: "爪爪焕新店铺吉祥物白色长毛猫坐在温暖的宠物洗护店内",
+    eyebrow: "店宠吉祥物 · 小猫主理推荐",
+    title: "由店里的小猫吉祥物，带你认识温柔洗护",
+    text: "以家里的毛孩子为灵感打造的店宠形象，代表我们对每只猫咪和狗狗的轻柔、耐心与认真。",
+  },
+  {
     image: heroDogSpa,
     alt: "干净明亮的宠物洗护店内，洗护后的狗狗坐在护理区",
     eyebrow: "犬只洗护 · 造型精修",
@@ -58,7 +66,7 @@ const heroSlides = [
   },
 ];
 
-const process = ["入店体检", "温和洗护", "造型修剪", "香氛交付"];
+const process = ["入店体检", "温和洗护", "造型修剪", "香气交付"];
 
 const reviews = [
   {
@@ -107,7 +115,7 @@ const reviews = [
     name: "元宝 家长",
     pet: "柴犬 · 3 岁",
     service: "除浮毛护理",
-    text: "柴犬换毛期太夸张了，做完除浮毛护理以后家里轻松很多。护理记录写得清楚，知道下次该什么时候再来。",
+    text: "柴犬换毛期太夸张了，做完除浮毛护理以后家里轻松很多。护理记录写得清楚，知道下次什么时候再来。",
   },
   {
     name: "小满 家长",
@@ -126,7 +134,7 @@ const reviewPages = reviews.reduce((pages, review, index) => {
   return pages;
 }, []);
 
-function App() {
+export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeReviewPage, setActiveReviewPage] = useState(0);
   const currentSlide = heroSlides[activeSlide];
@@ -189,7 +197,7 @@ function App() {
         {heroSlides.map((slide, index) => (
           <img
             className={`hero-image ${index === activeSlide ? "is-active" : ""}`}
-            src={slide.image}
+            src={slide.image.src}
             alt={slide.alt}
             key={slide.alt}
           />
@@ -198,9 +206,7 @@ function App() {
         <div className="hero-content">
           <p className="eyebrow">{currentSlide.eyebrow}</p>
           <h1>{currentSlide.title}</h1>
-          <p className="hero-copy">
-            {currentSlide.text}
-          </p>
+          <p className="hero-copy">{currentSlide.text}</p>
           <div className="hero-actions">
             <a className="primary-button" href="#booking">
               立即预约 <ChevronRight size={18} />
@@ -353,7 +359,7 @@ function App() {
         </div>
         <aside className="store-panel" aria-label="门店设施">
           <div className="store-map">
-            <img src={storeMapYichuan} alt="陕西北路1620号附近的可爱宠物店风格地图" />
+            <img src={storeMapYichuan.src} alt="陕西北路1620号附近的可爱宠物店风格地图" />
             <div className="map-marker" aria-hidden="true">
               <MapPin size={28} fill="currentColor" />
             </div>
@@ -413,7 +419,7 @@ function App() {
         <form className="booking-form">
           <label>
             宠物名字
-            <input type="text" placeholder="例如：奶糖" />
+            <input type="text" placeholder="例如：奶昔" />
           </label>
           <label>
             宠物类型
@@ -449,5 +455,3 @@ function App() {
     </main>
   );
 }
-
-createRoot(document.getElementById("root")).render(<App />);
