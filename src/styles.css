@@ -468,11 +468,15 @@ h3 {
 
 .store-section {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(330px, 0.75fr);
-  gap: clamp(28px, 6vw, 72px);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 42px);
+  align-items: start;
   background: #fffaf5;
   border-top: 1px solid #eadfd4;
+}
+
+.store-copy {
+  max-width: 860px;
 }
 
 .store-copy > p {
@@ -507,13 +511,14 @@ h3 {
 .store-panel {
   display: grid;
   gap: 16px;
+  width: 100%;
 }
 
 .store-map {
   position: relative;
-  min-height: 320px;
+  min-height: clamp(360px, 52vw, 620px);
+  aspect-ratio: 1672 / 941;
   overflow: hidden;
-  padding: 28px;
   border-radius: 8px;
   border: 1px solid #eadfd4;
   background: #fff;
@@ -525,7 +530,7 @@ h3 {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
