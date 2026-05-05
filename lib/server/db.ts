@@ -38,11 +38,11 @@ export function getPool(): Pool {
 }
 
 function getPgConfig() {
-  const host = process.env.PGHOST;
-  const user = process.env.PGUSER;
-  const password = process.env.PGPASSWORD;
-  const database = process.env.PGDATABASE;
-  const port = Number(process.env.PGPORT || 5432);
+  const host = process.env.PGHOST || process.env.PETCARE_DB_HOST;
+  const user = process.env.PGUSER || process.env.PETCARE_DB_USER;
+  const password = process.env.PGPASSWORD || process.env.PETCARE_DB_PASSWORD;
+  const database = process.env.PGDATABASE || process.env.PETCARE_DB_NAME;
+  const port = Number(process.env.PGPORT || process.env.PETCARE_DB_PORT || 5432);
 
   if (!host || !user || !password || !database) {
     return null;
