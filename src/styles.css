@@ -26,7 +26,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -92,6 +93,12 @@ footer p {
   border-radius: 8px;
   color: #0c6b64;
   background: #f7fbf9;
+}
+
+.nav-auth-button {
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .hero {
@@ -734,11 +741,23 @@ h3 {
   opacity: 0.72;
 }
 
+.booking-existing-pet {
+  grid-column: 1 / -1;
+}
+
 .booking-message {
   grid-column: 1 / -1;
   margin: 0;
   font-size: 0.92rem;
   font-weight: 800;
+}
+
+.booking-login-link {
+  display: inline-flex;
+  margin-left: 10px;
+  color: #0c6b64;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .booking-message-success {
@@ -933,6 +952,13 @@ footer p {
   font-weight: 800;
 }
 
+.password-hint {
+  color: #526064;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .input-with-icon {
   min-height: 48px;
   display: flex;
@@ -972,8 +998,27 @@ footer p {
   cursor: pointer;
 }
 
+.auth-form button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .auth-form-accent button {
   background: #0c6b64;
+}
+
+.auth-message {
+  margin: -2px 0 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.auth-message-success {
+  color: #0c6b64;
+}
+
+.auth-message-error {
+  color: #b83224;
 }
 
 .auth-benefits {
@@ -1002,6 +1047,374 @@ footer p {
   color: #0c6b64;
 }
 
+.account-page {
+  min-height: 100vh;
+  color: #1d2428;
+  background: #fffaf5;
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px clamp(20px, 5vw, 64px);
+  border-bottom: 1px solid #eadfd4;
+  background: rgba(255, 250, 245, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.account-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-logout {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 16px;
+  border: 1px solid #d8e9e3;
+  border-radius: 8px;
+  color: #0c6b64;
+  background: #f7fbf9;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.account-shell {
+  display: grid;
+  gap: 24px;
+  padding: clamp(32px, 5vw, 64px) clamp(20px, 6vw, 78px) clamp(54px, 7vw, 84px);
+}
+
+.account-title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.account-title-row h1 {
+  margin-bottom: 12px;
+  color: #1d2428;
+  font-size: clamp(2.15rem, 5vw, 4.2rem);
+}
+
+.account-title-row p:last-child {
+  max-width: 720px;
+  margin-bottom: 0;
+  color: #667174;
+}
+
+.account-profile {
+  min-width: min(100%, 300px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #d8e9e3;
+  border-radius: 8px;
+  background: #f7fbf9;
+}
+
+.account-profile > span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #fff;
+  background: #0c6b64;
+}
+
+.account-profile div {
+  display: grid;
+  gap: 2px;
+}
+
+.account-profile strong {
+  font-size: 1.05rem;
+}
+
+.account-profile small,
+.appointment-date small,
+.appointment-main small,
+.pet-item small {
+  color: #667174;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.account-panel {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #eadfd4;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 22px 60px rgba(68, 48, 35, 0.08);
+}
+
+.account-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account-panel-heading h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+}
+
+.account-pill {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #0c6b64;
+  background: #e6f4ef;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.appointment-list,
+.pet-list {
+  display: grid;
+  gap: 12px;
+}
+
+.appointment-item,
+.pet-item {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e5eee9;
+  border-radius: 8px;
+  background: #fffdfb;
+}
+
+.appointment-item {
+  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.appointment-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.appointment-date svg {
+  color: #e05a47;
+  flex: 0 0 auto;
+}
+
+.appointment-date div,
+.appointment-main {
+  display: grid;
+  gap: 3px;
+}
+
+.appointment-main h3,
+.pet-item h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.appointment-main p,
+.pet-item p {
+  margin: 0;
+  color: #344044;
+  font-weight: 800;
+}
+
+.status-badge {
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #0c6b64;
+  background: #e6f4ef;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.status-completed {
+  color: #526064;
+  background: #eef1ef;
+}
+
+.status-cancelled {
+  color: #b83224;
+  background: #fff0ed;
+}
+
+.pet-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #d8e9e3;
+  border-radius: 8px;
+  background: #f7fbf9;
+}
+
+.pet-form label {
+  display: grid;
+  gap: 8px;
+  color: #384549;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.pet-form input,
+.pet-form select,
+.pet-form textarea {
+  width: 100%;
+  border: 1px solid #d9cbc0;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #1d2428;
+  background: #fffdfb;
+}
+
+.pet-form input,
+.pet-form select {
+  min-height: 44px;
+}
+
+.pet-form textarea {
+  padding-top: 10px;
+  resize: vertical;
+}
+
+.pet-notes-field,
+.pet-form-actions {
+  grid-column: 1 / -1;
+}
+
+.pet-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pet-form button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: #0c6b64;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pet-form button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.pet-form .pet-cancel-button {
+  color: #344044;
+  background: #fff;
+  border: 1px solid #eadfd4;
+}
+
+.pet-item {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.pet-item-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #0c6b64;
+  background: #e6f4ef;
+}
+
+.pet-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pet-item-actions button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #eadfd4;
+  border-radius: 8px;
+  color: #344044;
+  background: #fff;
+  cursor: pointer;
+}
+
+.account-empty,
+.account-loading {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 240px;
+  padding: 24px;
+  border: 1px dashed #d9cbc0;
+  border-radius: 8px;
+  color: #667174;
+  text-align: center;
+}
+
+.account-empty-small {
+  min-height: 180px;
+}
+
+.account-empty svg,
+.account-loading svg {
+  color: #0c6b64;
+}
+
+.account-empty h3 {
+  margin: 0;
+  color: #1d2428;
+}
+
+.account-empty p {
+  max-width: 360px;
+  margin: 0;
+}
+
+.account-message {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.account-message-success {
+  color: #0c6b64;
+  background: #e6f4ef;
+}
+
+.account-message-error {
+  color: #b83224;
+  background: #fff0ed;
+}
+
 @media (max-width: 860px) {
   .site-header {
     position: absolute;
@@ -1026,8 +1439,23 @@ footer p {
   .booking-form,
   .auth-shell,
   .auth-form-grid,
-  .auth-benefits {
+  .auth-benefits,
+  .account-grid,
+  .pet-form,
+  .appointment-item {
     grid-template-columns: 1fr;
+  }
+
+  .account-header,
+  .account-title-row,
+  .account-panel-heading {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .account-header-actions,
+  .pet-form-actions {
+    display: grid;
   }
 
   .auth-shell {

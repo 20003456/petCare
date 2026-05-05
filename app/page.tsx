@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { StaticImageData } from "next/image";
+import { type FormEvent, useEffect, useState } from "react";
 import {
   Bath,
   CalendarCheck,
@@ -10,19 +11,66 @@ import {
   Clock3,
   HeartHandshake,
   LogIn,
+  LogOut,
   MapPin,
   PawPrint,
   Scissors,
   ShieldCheck,
   Sparkles,
   Star,
+  UserRound,
+  type LucideIcon,
 } from "lucide-react";
 import heroCatCare from "../src/assets/hero-cat-care.png";
 import heroDogSpa from "../src/assets/hero-dog-spa.png";
 import heroMascotCat from "../src/assets/hero-mascot-cat.png";
 import storeMapYichuan from "../src/assets/store-map-yichuan.png";
+import { normalizeChinaPhone } from "../lib/phone";
 
-const services = [
+type Service = {
+  icon: LucideIcon;
+  title: string;
+  price: string;
+  text: string;
+};
+
+type HeroSlide = {
+  image: StaticImageData;
+  alt: string;
+  eyebrow: string;
+  title: string;
+  text: string;
+};
+
+type Review = {
+  name: string;
+  pet: string;
+  service: string;
+  text: string;
+};
+
+type BookingForm = {
+  petName: string;
+  petType: string;
+  appointmentDate: string;
+  phone: string;
+};
+type BookingField = keyof BookingForm;
+type Pet = {
+  id: string;
+  name: string;
+  petType: string;
+  sensitivityNotes: string | null;
+};
+type SubmitStatus = "idle" | "submitting" | "success" | "error";
+type SlideDirection = "previous" | "next";
+type AppUser = {
+  id: string;
+  phone: string;
+  customerName: string | null;
+};
+
+const services: Service[] = [
   {
     icon: Bath,
     title: "基础香波洗护",
@@ -43,7 +91,7 @@ const services = [
   },
 ];
 
-const heroSlides = [
+const heroSlides: HeroSlide[] = [
   {
     image: heroMascotCat,
     alt: "爪爪焕新店铺吉祥物白色长毛猫坐在温暖的宠物洗护店内",
@@ -69,7 +117,7 @@ const heroSlides = [
 
 const process = ["入店体检", "温和洗护", "造型修剪", "香气交付"];
 
-const reviews = [
+const reviews: Review[] = [
   {
     name: "Lucky 家长",
     pet: "比熊 · 3 岁",
@@ -126,7 +174,7 @@ const reviews = [
   },
 ];
 
-const reviewPages = reviews.reduce((pages, review, index) => {
+const reviewPages = reviews.reduce<Review[][]>((pages, review, index) => {
   const pageIndex = Math.floor(index / 3);
   if (!pages[pageIndex]) {
     pages[pageIndex] = [];
@@ -146,8 +194,12 @@ export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeReviewPage, setActiveReviewPage] = useState(0);
   const [bookingForm, setBookingForm] = useState(initialBookingForm);
-  const [bookingStatus, setBookingStatus] = useState("idle");
+  const [bookingStatus, setBookingStatus] = useState<SubmitStatus>("idle");
   const [bookingMessage, setBookingMessage] = useState("");
+  const [bookingNeedsLogin, setBookingNeedsLogin] = useState(false);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [selectedPetId, setSelectedPetId] = useState("");
   const currentSlide = heroSlides[activeSlide];
 
   useEffect(() => {
@@ -166,7 +218,57 @@ export default function HomePage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const goToSlide = (direction) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncSession = (nextUser: AppUser | null) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setUser(nextUser);
+
+      const phone = normalizeChinaPhone(nextUser?.phone);
+
+      if (phone) {
+        setBookingForm((current) => ({
+          ...current,
+          phone: current.phone || phone,
+        }));
+
+        fetch("/api/pets")
+          .then((response) => (response.ok ? response.json() : { pets: [] }))
+          .then((result) => {
+            if (isMounted) {
+              setPets(result.pets ?? []);
+            }
+          })
+          .catch(() => {
+            if (isMounted) {
+              setPets([]);
+            }
+          });
+      } else {
+        setPets([]);
+        setSelectedPetId("");
+      }
+    };
+
+    fetch("/api/auth/session")
+      .then((response) => response.json())
+      .then((result) => {
+        syncSession(result.user ?? null);
+      })
+      .catch(() => {
+        syncSession(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const goToSlide = (direction: SlideDirection) => {
     setActiveSlide((index) => {
       if (direction === "previous") {
         return (index - 1 + heroSlides.length) % heroSlides.length;
@@ -176,7 +278,7 @@ export default function HomePage() {
     });
   };
 
-  const goToReviewPage = (direction) => {
+  const goToReviewPage = (direction: SlideDirection) => {
     setActiveReviewPage((index) => {
       if (direction === "previous") {
         return (index - 1 + reviewPages.length) % reviewPages.length;
@@ -186,16 +288,53 @@ export default function HomePage() {
     });
   };
 
-  const updateBookingField = (field, value) => {
+  const updateBookingField = (field: BookingField, value: string) => {
     setBookingForm((current) => ({ ...current, [field]: value }));
+
+    if (field === "petName" || field === "petType") {
+      setSelectedPetId("");
+    }
   };
 
-  const submitBooking = async (event) => {
+  const selectPet = (petId: string) => {
+    setSelectedPetId(petId);
+
+    const pet = pets.find((item) => item.id === petId);
+
+    if (!pet) {
+      return;
+    }
+
+    setBookingForm((current) => ({
+      ...current,
+      petName: pet.name,
+      petType: pet.petType,
+    }));
+  };
+
+  const signOut = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    setBookingNeedsLogin(false);
+    setBookingStatus("idle");
+    setBookingMessage("");
+    setBookingForm((current) => ({ ...current, phone: "" }));
+    setPets([]);
+    setSelectedPetId("");
+  };
+
+  const submitBooking = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBookingStatus("submitting");
     setBookingMessage("");
+    setBookingNeedsLogin(false);
 
     try {
+      if (!user) {
+        setBookingNeedsLogin(true);
+        throw new Error("请先登录，再提交预约。");
+      }
+
       const response = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -207,12 +346,19 @@ export default function HomePage() {
         throw new Error(result.message || "提交失败，请稍后再试。");
       }
 
-      setBookingForm(initialBookingForm);
+      setBookingForm({
+        ...initialBookingForm,
+        phone: normalizeChinaPhone(user.phone),
+      });
+      setSelectedPetId("");
       setBookingStatus("success");
       setBookingMessage("预约已提交，门店会尽快联系你确认时间。");
+      setBookingNeedsLogin(false);
     } catch (error) {
       setBookingStatus("error");
-      setBookingMessage(error.message || "提交失败，请稍后再试。");
+      setBookingMessage(
+        error instanceof Error ? error.message : "提交失败，请稍后再试。",
+      );
     }
   };
 
@@ -231,10 +377,23 @@ export default function HomePage() {
           <a href="#store">店面</a>
           <a href="#process">流程</a>
           <a href="#booking">预约</a>
-          <a className="nav-auth-link" href="/auth">
-            <LogIn size={17} />
-            登录 / 注册
-          </a>
+          {user ? (
+            <>
+              <a className="nav-auth-link" href="/account">
+                <UserRound size={17} />
+                我的账号
+              </a>
+            <button className="nav-auth-link nav-auth-button" type="button" onClick={signOut}>
+              <LogOut size={17} />
+              退出
+            </button>
+            </>
+          ) : (
+            <a className="nav-auth-link" href="/auth">
+              <LogIn size={17} />
+              登录 / 注册
+            </a>
+          )}
         </nav>
       </header>
 
@@ -462,6 +621,19 @@ export default function HomePage() {
           </ul>
         </div>
         <form className="booking-form" onSubmit={submitBooking}>
+          {user && pets.length > 0 ? (
+            <label className="booking-existing-pet">
+              选择已有宠物
+              <select value={selectedPetId} onChange={(event) => selectPet(event.target.value)}>
+                <option value="">新宠物 / 手动填写</option>
+                {pets.map((pet) => (
+                  <option value={pet.id} key={pet.id}>
+                    {pet.name} · {pet.petType}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <label>
             宠物名字
             <input
@@ -511,6 +683,11 @@ export default function HomePage() {
           {bookingMessage ? (
             <p className={`booking-message booking-message-${bookingStatus}`}>
               {bookingMessage}
+              {bookingNeedsLogin ? (
+                <a className="booking-login-link" href="/auth">
+                  去登录 / 注册
+                </a>
+              ) : null}
             </p>
           ) : null}
         </form>
