@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "../../../lib/server/auth";
-import { getPool } from "../../../lib/server/db";
+import {
+  getDatabaseConfigErrorResponse,
+  getPool,
+  isDatabaseConfigError,
+} from "../../../lib/server/db";
 
 export const runtime = "nodejs";
 
@@ -14,13 +18,13 @@ type PetRow = {
 };
 
 export async function GET(request: NextRequest) {
-  const user = await getUserFromRequest(request);
-
-  if (!user) {
-    return NextResponse.json({ message: "请先登录。" }, { status: 401 });
-  }
-
   try {
+    const user = await getUserFromRequest(request);
+
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
+
     const result = await getPool().query<PetRow>(
       `select id, name, pet_type, sensitivity_notes, created_at, updated_at
        from public.pets
@@ -34,6 +38,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Failed to load pets", error);
 
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
+
     return NextResponse.json(
       { message: "暂时无法读取宠物档案。" },
       { status: 500 },
@@ -42,33 +52,33 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUserFromRequest(request);
-
-  if (!user) {
-    return NextResponse.json({ message: "请先登录。" }, { status: 401 });
-  }
-
-  let body: { name?: unknown; petType?: unknown; sensitivityNotes?: unknown };
-
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { message: "请求内容格式不正确。" },
-      { status: 400 },
-    );
-  }
+    const user = await getUserFromRequest(request);
 
-  const data = cleanPetInput(body);
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
 
-  if (!data.name || !data.petType) {
-    return NextResponse.json(
-      { message: "请填写宠物名字和宠物类型。" },
-      { status: 400 },
-    );
-  }
+    let body: { name?: unknown; petType?: unknown; sensitivityNotes?: unknown };
 
-  try {
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "请求内容格式不正确。" },
+        { status: 400 },
+      );
+    }
+
+    const data = cleanPetInput(body);
+
+    if (!data.name || !data.petType) {
+      return NextResponse.json(
+        { message: "请填写宠物名字和宠物类型。" },
+        { status: 400 },
+      );
+    }
+
     const result = await getPool().query<PetRow>(
       `insert into public.pets (user_id, name, pet_type, sensitivity_notes)
        values ($1, $2, $3, nullif($4, ''))
@@ -82,6 +92,12 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Failed to create pet", error);
+
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
 
     return NextResponse.json(
       { message: "暂时无法创建宠物档案，请稍后再试。" },

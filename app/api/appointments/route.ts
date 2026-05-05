@@ -2,7 +2,11 @@ import { type NextRequest, NextResponse } from "next/server";
 import { type PoolClient } from "pg";
 import { normalizeChinaPhone } from "../../../lib/phone";
 import { getUserFromRequest } from "../../../lib/server/auth";
-import { getPool } from "../../../lib/server/db";
+import {
+  getDatabaseConfigErrorResponse,
+  getPool,
+  isDatabaseConfigError,
+} from "../../../lib/server/db";
 
 export const runtime = "nodejs";
 
@@ -24,27 +28,17 @@ const requiredFields = [
 ] satisfies Array<keyof AppointmentData>;
 
 export async function GET(request: NextRequest) {
-  let pool;
-
   try {
-    pool = getPool();
-  } catch {
-    return NextResponse.json(
-      { message: "Server database connection is not configured." },
-      { status: 500 },
-    );
-  }
+    const pool = getPool();
+    const user = await getUserFromRequest(request);
 
-  const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { message: "请先登录，再查看预约。" },
+        { status: 401 },
+      );
+    }
 
-  if (!user) {
-    return NextResponse.json(
-      { message: "请先登录，再查看预约。" },
-      { status: 401 },
-    );
-  }
-
-  try {
     const result = await pool.query(
       `select
         id,
@@ -67,6 +61,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("Failed to load appointments", error);
 
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
+
     return NextResponse.json(
       { message: "暂时无法读取预约记录。" },
       { status: 500 },
@@ -75,67 +75,57 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  let pool;
-
   try {
-    pool = getPool();
-  } catch {
-    return NextResponse.json(
-      { message: "Server database connection is not configured." },
-      { status: 500 },
-    );
-  }
+    const pool = getPool();
+    const user = await getUserFromRequest(request);
 
-  const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { message: "请先登录，再提交预约。" },
+        { status: 401 },
+      );
+    }
 
-  if (!user) {
-    return NextResponse.json(
-      { message: "请先登录，再提交预约。" },
-      { status: 401 },
-    );
-  }
+    let body: {
+      customerName?: unknown;
+      phone?: unknown;
+      petName?: unknown;
+      petType?: unknown;
+      serviceType?: unknown;
+      appointmentDate?: unknown;
+      appointmentTime?: unknown;
+      notes?: unknown;
+    };
 
-  let body: {
-    customerName?: unknown;
-    phone?: unknown;
-    petName?: unknown;
-    petType?: unknown;
-    serviceType?: unknown;
-    appointmentDate?: unknown;
-    appointmentTime?: unknown;
-    notes?: unknown;
-  };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "请求内容格式不正确。" },
+        { status: 400 },
+      );
+    }
 
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { message: "Request body must be valid JSON." },
-      { status: 400 },
-    );
-  }
+    const data: AppointmentData = {
+      customerName: cleanText(body.customerName),
+      phone: normalizeChinaPhone(body.phone) || user.phone,
+      petName: cleanText(body.petName),
+      petType: cleanText(body.petType),
+      serviceType: cleanText(body.serviceType),
+      appointmentDate: cleanText(body.appointmentDate),
+      appointmentTime: cleanText(body.appointmentTime),
+      notes: cleanText(body.notes),
+    };
 
-  const data: AppointmentData = {
-    customerName: cleanText(body.customerName),
-    phone: normalizeChinaPhone(body.phone) || user.phone,
-    petName: cleanText(body.petName),
-    petType: cleanText(body.petType),
-    serviceType: cleanText(body.serviceType),
-    appointmentDate: cleanText(body.appointmentDate),
-    appointmentTime: cleanText(body.appointmentTime),
-    notes: cleanText(body.notes),
-  };
+    const missingField = requiredFields.find((field) => !data[field]);
 
-  const missingField = requiredFields.find((field) => !data[field]);
+    if (missingField) {
+      return NextResponse.json(
+        { message: "请填写宠物名字、宠物类型和预约日期。" },
+        { status: 400 },
+      );
+    }
 
-  if (missingField) {
-    return NextResponse.json(
-      { message: "请填写宠物名字、宠物类型和预约日期。" },
-      { status: 400 },
-    );
-  }
-
-  try {
     const client = await pool.connect();
 
     try {
@@ -192,6 +182,12 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Failed to create appointment", error);
+
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
 
     return NextResponse.json(
       { message: "暂时无法提交预约，请稍后再试。" },

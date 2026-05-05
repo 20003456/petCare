@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "../../../../lib/server/auth";
-import { getPool } from "../../../../lib/server/db";
+import {
+  getDatabaseConfigErrorResponse,
+  getPool,
+  isDatabaseConfigError,
+} from "../../../../lib/server/db";
 
 export const runtime = "nodejs";
 
@@ -17,62 +21,35 @@ type PetRow = {
   updated_at: string;
 };
 
-function cleanPetInput(body: {
-  name?: unknown;
-  petType?: unknown;
-  sensitivityNotes?: unknown;
-}) {
-  return {
-    name: cleanText(body.name),
-    petType: cleanText(body.petType),
-    sensitivityNotes: cleanText(body.sensitivityNotes),
-  };
-}
-
-function mapPet(row: PetRow) {
-  return {
-    id: row.id,
-    name: row.name,
-    petType: row.pet_type,
-    sensitivityNotes: row.sensitivity_notes,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
-function cleanText(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
-}
-
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const user = await getUserFromRequest(request);
-
-  if (!user) {
-    return NextResponse.json({ message: "请先登录。" }, { status: 401 });
-  }
-
-  const { id } = await context.params;
-  let body: { name?: unknown; petType?: unknown; sensitivityNotes?: unknown };
-
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { message: "请求内容格式不正确。" },
-      { status: 400 },
-    );
-  }
+    const user = await getUserFromRequest(request);
 
-  const data = cleanPetInput(body);
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
 
-  if (!data.name || !data.petType) {
-    return NextResponse.json(
-      { message: "请填写宠物名字和宠物类型。" },
-      { status: 400 },
-    );
-  }
+    const { id } = await context.params;
+    let body: { name?: unknown; petType?: unknown; sensitivityNotes?: unknown };
 
-  try {
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "请求内容格式不正确。" },
+        { status: 400 },
+      );
+    }
+
+    const data = cleanPetInput(body);
+
+    if (!data.name || !data.petType) {
+      return NextResponse.json(
+        { message: "请填写宠物名字和宠物类型。" },
+        { status: 400 },
+      );
+    }
+
     const result = await getPool().query<PetRow>(
       `update public.pets
        set name = $1,
@@ -100,6 +77,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   } catch (error) {
     console.error("Failed to update pet", error);
 
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
+
     return NextResponse.json(
       { message: "暂时无法更新宠物档案，请稍后再试。" },
       { status: 500 },
@@ -108,15 +91,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const user = await getUserFromRequest(request);
-
-  if (!user) {
-    return NextResponse.json({ message: "请先登录。" }, { status: 401 });
-  }
-
-  const { id } = await context.params;
-
   try {
+    const user = await getUserFromRequest(request);
+
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
+
+    const { id } = await context.params;
+
     const result = await getPool().query<{ id: string }>(
       `update public.pets
        set deleted_at = now(),
@@ -139,9 +122,42 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   } catch (error) {
     console.error("Failed to delete pet", error);
 
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
+
     return NextResponse.json(
       { message: "暂时无法删除宠物档案，请稍后再试。" },
       { status: 500 },
     );
   }
+}
+
+function cleanPetInput(body: {
+  name?: unknown;
+  petType?: unknown;
+  sensitivityNotes?: unknown;
+}) {
+  return {
+    name: cleanText(body.name),
+    petType: cleanText(body.petType),
+    sensitivityNotes: cleanText(body.sensitivityNotes),
+  };
+}
+
+function mapPet(row: PetRow) {
+  return {
+    id: row.id,
+    name: row.name,
+    petType: row.pet_type,
+    sensitivityNotes: row.sensitivity_notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function cleanText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }

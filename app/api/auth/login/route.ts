@@ -5,7 +5,11 @@ import {
   createUserSession,
   setSessionCookie,
 } from "../../../../lib/server/auth";
-import { getPool } from "../../../../lib/server/db";
+import {
+  getDatabaseConfigErrorResponse,
+  getPool,
+  isDatabaseConfigError,
+} from "../../../../lib/server/db";
 
 export const runtime = "nodejs";
 
@@ -86,6 +90,12 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Failed to log in user", error);
+
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
 
     return NextResponse.json(
       { message: "登录服务暂时不可用，请稍后再试。" },

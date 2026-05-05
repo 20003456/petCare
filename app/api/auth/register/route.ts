@@ -2,8 +2,15 @@ import { hash } from "bcryptjs";
 import { type NextRequest, NextResponse } from "next/server";
 import { normalizeChinaPhone } from "../../../../lib/phone";
 import { validatePasswordStrength } from "../../../../lib/password";
-import { getPool } from "../../../../lib/server/db";
-import { createSupabaseAdminClient } from "../../../../lib/supabase/admin";
+import {
+  getDatabaseConfigErrorResponse,
+  getPool,
+  isDatabaseConfigError,
+} from "../../../../lib/server/db";
+import {
+  createSupabaseAdminClient,
+  SupabaseAdminConfigError,
+} from "../../../../lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -12,9 +19,15 @@ export async function POST(request: NextRequest) {
 
   try {
     pool = getPool();
-  } catch {
+  } catch (error) {
+    if (isDatabaseConfigError(error)) {
+      return NextResponse.json(getDatabaseConfigErrorResponse(error), {
+        status: 500,
+      });
+    }
+
     return NextResponse.json(
-      { message: "Server database connection is not configured." },
+      { message: "服务器数据库连接暂时不可用，请稍后再试。" },
       { status: 500 },
     );
   }
@@ -71,12 +84,19 @@ export async function POST(request: NextRequest) {
 
     try {
       supabase = createSupabaseAdminClient();
-    } catch {
+    } catch (error) {
+      if (error instanceof SupabaseAdminConfigError) {
+        return NextResponse.json(
+          {
+            message: error.message,
+            missingEnv: error.missingEnv,
+          },
+          { status: 500 },
+        );
+      }
+
       return NextResponse.json(
-        {
-          message:
-            "注册服务缺少 SUPABASE_SERVICE_ROLE_KEY 配置。请在 .env.local 里填入 Supabase 的 service_role key，然后重启项目。",
-        },
+        { message: "注册服务暂时不可用，请稍后再试。" },
         { status: 500 },
       );
     }
