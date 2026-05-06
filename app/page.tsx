@@ -26,6 +26,7 @@ import heroDogSpa from "../src/assets/hero-dog-spa.png";
 import heroMascotCat from "../src/assets/hero-mascot-cat.png";
 import storeMapYichuan from "../src/assets/store-map-yichuan.png";
 import { normalizeChinaPhone } from "../lib/phone";
+import { AiConsultAssistant } from "./AiConsultAssistant";
 
 type Service = {
   icon: LucideIcon;
@@ -115,7 +116,7 @@ const heroSlides: HeroSlide[] = [
   },
 ];
 
-const process = ["入店体检", "温和洗护", "造型修剪", "香气交付"];
+const careSteps = ["入店体检", "温和洗护", "造型修剪", "香气交付"];
 
 const reviews: Review[] = [
   {
@@ -599,7 +600,7 @@ export default function HomePage() {
             洗护过程避开强刺激香精，吹风强度也会按耐受程度调整。
           </p>
           <div className="process-list">
-            {process.map((item, index) => (
+            {careSteps.map((item, index) => (
               <div className="process-item" key={item}>
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <p>{item}</p>
@@ -700,6 +701,7 @@ export default function HomePage() {
         </div>
         <p>营业时间 10:00-21:00 · 预约电话 400-880-6618</p>
       </footer>
+      <AiConsultAssistant />
     </main>
   );
 }

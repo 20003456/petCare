@@ -25,11 +25,13 @@ const initialRegister = {
   confirmPassword: "",
 };
 
+type AuthTab = "login" | "register";
 type SubmitStatus = "idle" | "submitting" | "success" | "error";
 type LoginField = keyof typeof initialLogin;
 type RegisterField = keyof typeof initialRegister;
 
 export default function AuthForms() {
+  const [activeTab, setActiveTab] = useState<AuthTab>("login");
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [registerForm, setRegisterForm] = useState(initialRegister);
   const [loginStatus, setLoginStatus] = useState<SubmitStatus>("idle");
@@ -44,6 +46,12 @@ export default function AuthForms() {
 
   const updateRegister = (field: RegisterField, value: string) => {
     setRegisterForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const switchTab = (tab: AuthTab) => {
+    setActiveTab(tab);
+    setLoginMessage("");
+    setRegisterMessage("");
   };
 
   const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -135,134 +143,183 @@ export default function AuthForms() {
 
   return (
     <>
-      <div className="auth-form-grid">
-        <form className="auth-form" onSubmit={submitLogin}>
-          <div className="auth-form-title">
-            <span>
-              <UserRound size={20} />
-            </span>
-            <div>
-              <h3>登录</h3>
-              <p>继续管理你的预约</p>
-            </div>
-          </div>
-          <label>
-            手机号
-            <div className="input-with-icon">
-              <Phone size={18} />
-              <input
-                type="tel"
-                placeholder="请输入预约手机号"
-                value={loginForm.phone}
-                onChange={(event) => updateLogin("phone", event.target.value)}
-                required
-              />
-            </div>
-          </label>
-          <label>
-            密码
-            <div className="input-with-icon">
-              <LockKeyhole size={18} />
-              <input
-                type="password"
-                placeholder="请输入密码"
-                value={loginForm.password}
-                onChange={(event) => updateLogin("password", event.target.value)}
-                required
-              />
-            </div>
-          </label>
-          <button type="submit" disabled={loginStatus === "submitting"}>
-            <ShieldCheck size={19} />
-            {loginStatus === "submitting" ? "登录中..." : "登录账号"}
+      <section className="auth-card" aria-label="家长账号登录注册">
+        <div className="auth-tabs" role="tablist" aria-label="账号操作">
+          <button
+            type="button"
+            className={`auth-tab-button ${activeTab === "login" ? "is-active" : ""}`}
+            role="tab"
+            aria-selected={activeTab === "login"}
+            aria-controls="login-panel"
+            id="login-tab"
+            onClick={() => switchTab("login")}
+          >
+            登录
           </button>
-          {loginMessage ? (
-            <p className={`auth-message auth-message-${loginStatus}`}>
-              {loginMessage}
-            </p>
-          ) : null}
-        </form>
+          <button
+            type="button"
+            className={`auth-tab-button ${activeTab === "register" ? "is-active" : ""}`}
+            role="tab"
+            aria-selected={activeTab === "register"}
+            aria-controls="register-panel"
+            id="register-tab"
+            onClick={() => switchTab("register")}
+          >
+            注册
+          </button>
+        </div>
 
-        <form className="auth-form auth-form-accent" onSubmit={submitRegister}>
-          <div className="auth-form-title">
-            <span>
-              <Sparkles size={20} />
-            </span>
-            <div>
-              <h3>注册</h3>
-              <p>第一次来，先留一份档案</p>
+        {activeTab === "login" ? (
+          <form
+            className="auth-form"
+            id="login-panel"
+            role="tabpanel"
+            aria-labelledby="login-tab"
+            onSubmit={submitLogin}
+          >
+            <div className="auth-form-title">
+              <span>
+                <UserRound size={20} />
+              </span>
+              <div>
+                <h3>登录</h3>
+                <p>继续管理你的预约</p>
+              </div>
             </div>
-          </div>
-          <label>
-            家长姓名
-            <div className="input-with-icon">
-              <UserRound size={18} />
-              <input
-                type="text"
-                placeholder="例如：小满家长"
-                value={registerForm.customerName}
-                onChange={(event) => updateRegister("customerName", event.target.value)}
-                required
-              />
+            <label>
+              手机号
+              <div className="input-with-icon">
+                <Phone size={18} />
+                <input
+                  type="tel"
+                  placeholder="请输入预约手机号"
+                  value={loginForm.phone}
+                  onChange={(event) => updateLogin("phone", event.target.value)}
+                  required
+                />
+              </div>
+            </label>
+            <label>
+              密码
+              <div className="input-with-icon">
+                <LockKeyhole size={18} />
+                <input
+                  type="password"
+                  placeholder="请输入密码"
+                  value={loginForm.password}
+                  onChange={(event) =>
+                    updateLogin("password", event.target.value)
+                  }
+                  required
+                />
+              </div>
+            </label>
+            <button type="submit" disabled={loginStatus === "submitting"}>
+              <ShieldCheck size={19} />
+              {loginStatus === "submitting" ? "登录中..." : "登录账号"}
+            </button>
+            {loginMessage ? (
+              <p className={`auth-message auth-message-${loginStatus}`}>
+                {loginMessage}
+              </p>
+            ) : null}
+          </form>
+        ) : (
+          <form
+            className="auth-form auth-form-accent"
+            id="register-panel"
+            role="tabpanel"
+            aria-labelledby="register-tab"
+            onSubmit={submitRegister}
+          >
+            <div className="auth-form-title">
+              <span>
+                <Sparkles size={20} />
+              </span>
+              <div>
+                <h3>注册</h3>
+                <p>第一次来，先留一份档案</p>
+              </div>
             </div>
-          </label>
-          <label>
-            手机号
-            <div className="input-with-icon">
-              <Phone size={18} />
-              <input
-                type="tel"
-                placeholder="用于确认预约"
-                value={registerForm.phone}
-                onChange={(event) => updateRegister("phone", event.target.value)}
-                required
-              />
-            </div>
-          </label>
-          <label>
-            密码
-            <div className="input-with-icon">
-              <LockKeyhole size={18} />
-              <input
-                type="password"
-                placeholder="至少 8 位，包含字母和数字"
-                value={registerForm.password}
-                onChange={(event) => updateRegister("password", event.target.value)}
-                minLength={8}
-                required
-              />
-            </div>
-            <span className="password-hint">
-              {passwordIssues.length > 0
-                ? `还需要：${passwordIssues.join("、")}`
-                : "密码强度符合要求"}
-            </span>
-          </label>
-          <label>
-            确认密码
-            <div className="input-with-icon">
-              <LockKeyhole size={18} />
-              <input
-                type="password"
-                placeholder="再输入一次密码"
-                value={registerForm.confirmPassword}
-                onChange={(event) => updateRegister("confirmPassword", event.target.value)}
-                minLength={8}
-                required
-              />
-            </div>
-          </label>
-          <button type="submit" disabled={registerStatus === "submitting"}>
-            <CalendarCheck size={19} />
-            {registerStatus === "submitting" ? "创建中..." : "创建账号"}
-          </button>
-          {registerMessage ? (
-            <p className={`auth-message auth-message-${registerStatus}`}>
-              {registerMessage}
-            </p>
-          ) : null}
-        </form>
-      </div>
+            <label>
+              家长姓名
+              <div className="input-with-icon">
+                <UserRound size={18} />
+                <input
+                  type="text"
+                  placeholder="例如：小满家长"
+                  value={registerForm.customerName}
+                  onChange={(event) =>
+                    updateRegister("customerName", event.target.value)
+                  }
+                  required
+                />
+              </div>
+            </label>
+            <label>
+              手机号
+              <div className="input-with-icon">
+                <Phone size={18} />
+                <input
+                  type="tel"
+                  placeholder="用于确认预约"
+                  value={registerForm.phone}
+                  onChange={(event) =>
+                    updateRegister("phone", event.target.value)
+                  }
+                  required
+                />
+              </div>
+            </label>
+            <label>
+              密码
+              <div className="input-with-icon">
+                <LockKeyhole size={18} />
+                <input
+                  type="password"
+                  placeholder="至少 8 位，包含字母和数字"
+                  value={registerForm.password}
+                  onChange={(event) =>
+                    updateRegister("password", event.target.value)
+                  }
+                  minLength={8}
+                  required
+                />
+              </div>
+              <span className="password-hint">
+                {passwordIssues.length > 0
+                  ? `还需要：${passwordIssues.join("、")}`
+                  : "密码强度符合要求"}
+              </span>
+            </label>
+            <label>
+              确认密码
+              <div className="input-with-icon">
+                <LockKeyhole size={18} />
+                <input
+                  type="password"
+                  placeholder="再输入一次密码"
+                  value={registerForm.confirmPassword}
+                  onChange={(event) =>
+                    updateRegister("confirmPassword", event.target.value)
+                  }
+                  minLength={8}
+                  required
+                />
+              </div>
+            </label>
+            <button type="submit" disabled={registerStatus === "submitting"}>
+              <CalendarCheck size={19} />
+              {registerStatus === "submitting" ? "创建中..." : "创建账号"}
+            </button>
+            {registerMessage ? (
+              <p className={`auth-message auth-message-${registerStatus}`}>
+                {registerMessage}
+              </p>
+            ) : null}
+          </form>
+        )}
+      </section>
 
       <div className="auth-benefits" aria-label="账号权益">
         <div>
